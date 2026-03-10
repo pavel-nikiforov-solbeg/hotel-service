@@ -1,0 +1,11 @@
+id,name,description,brand,house_number,street,city,country,post_code,phone,email,arrival_check_in,arrival_check_out
+1,Grand Hotel Minsk,Luxury hotel in the heart of Minsk,Marriott,9,Pobediteley Avenue,Minsk,Belarus,220004,+375-17-309-80-00,info@grandminsk.by,14:00,12:00
+2,Hotel Yubileiny,Modern hotel near the city center,Hilton,49,Pobediteley Avenue,Minsk,Belarus,220035,+375-17-223-28-30,info@yubileiny.by,15:00,11:00
+3,Crowne Plaza Minsk,International hotel with conference facilities,IHG,11,Kirov Street,Minsk,Belarus,220030,+375-17-309-59-59,info@cpminsk.by,14:00,12:00
+4,Hotel Belarus,Classic Soviet-era hotel with modern amenities,Best Western,15,Storozhevskaya Street,Minsk,Belarus,220002,+375-17-209-72-00,info@hotelbelarus.by,13:00,11:00
+5,Minsk Marriott Hotel,Premier business hotel,Marriott,6,Pobeditelei Avenue,Minsk,Belarus,220004,+375-17-268-46-00,marriott@minsk.by,15:00,12:00
+6,Park Inn by Radisson,Contemporary hotel near Minsk Arena,Radisson,20,Gazety Pravda Street,Minsk,Belarus,220116,+375-17-299-00-00,parkinn@minsk.by,14:00,12:00
+7,Hampton by Hilton Minsk City Centre,Comfortable hotel in city center,Hilton,17,Lenina Street,Minsk,Belarus,220030,+375-17-388-88-88,hampton@minsk.by,15:00,11:00
+8,DoubleTree by Hilton Minsk,Upscale hotel in business district,Hilton,9,Kirova Street,Minsk,Belarus,220030,+375-17-309-09-09,doubletree@minsk.by,15:00,12:00
+9,Novotel Minsk,Business hotel with modern amenities,Accor,63,Nezavisimosti Avenue,Minsk,Belarus,220005,+375-17-369-99-00,novotel@minsk.by,14:00,12:00
+10,Ibis Minsk,Budget-friendly hotel for business travelers,Accor,44,Nezavisimosti Avenue,Minsk,Belarus,220005,+375-17-369-99-55,ibis@minsk.by,14:00,12:00

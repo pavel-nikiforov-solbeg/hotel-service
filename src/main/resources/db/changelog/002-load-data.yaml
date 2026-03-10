@@ -1,0 +1,87 @@
+databaseChangeLog:
+  - changeSet:
+      id: 002-load-hotels
+      author: hotelservice
+      changes:
+        - loadData:
+            tableName: hotels
+            file: db/data/hotels.csv
+            columns:
+              - column:
+                  name: id
+                  type: NUMERIC
+              - column:
+                  name: name
+                  type: STRING
+              - column:
+                  name: description
+                  type: STRING
+              - column:
+                  name: brand
+                  type: STRING
+              - column:
+                  name: house_number
+                  type: NUMERIC
+              - column:
+                  name: street
+                  type: STRING
+              - column:
+                  name: city
+                  type: STRING
+              - column:
+                  name: country
+                  type: STRING
+              - column:
+                  name: post_code
+                  type: STRING
+              - column:
+                  name: phone
+                  type: STRING
+              - column:
+                  name: email
+                  type: STRING
+              - column:
+                  name: arrival_check_in
+                  type: STRING
+              - column:
+                  name: arrival_check_out
+                  type: STRING
+
+  - changeSet:
+      id: 002-load-amenities
+      author: hotelservice
+      changes:
+        - sql:
+            sql: >
+              INSERT INTO hotel_amenities (hotel_id, amenities) VALUES (1, 'Free WiFi');
+              INSERT INTO hotel_amenities (hotel_id, amenities) VALUES (1, 'Parking');
+              INSERT INTO hotel_amenities (hotel_id, amenities) VALUES (1, 'Swimming Pool');
+              INSERT INTO hotel_amenities (hotel_id, amenities) VALUES (1, 'Spa');
+              INSERT INTO hotel_amenities (hotel_id, amenities) VALUES (2, 'Free WiFi');
+              INSERT INTO hotel_amenities (hotel_id, amenities) VALUES (2, 'Fitness Center');
+              INSERT INTO hotel_amenities (hotel_id, amenities) VALUES (2, 'Restaurant');
+              INSERT INTO hotel_amenities (hotel_id, amenities) VALUES (3, 'Free WiFi');
+              INSERT INTO hotel_amenities (hotel_id, amenities) VALUES (3, 'Parking');
+              INSERT INTO hotel_amenities (hotel_id, amenities) VALUES (3, 'Conference Room');
+              INSERT INTO hotel_amenities (hotel_id, amenities) VALUES (3, 'Restaurant');
+              INSERT INTO hotel_amenities (hotel_id, amenities) VALUES (4, 'Free WiFi');
+              INSERT INTO hotel_amenities (hotel_id, amenities) VALUES (4, 'Parking');
+              INSERT INTO hotel_amenities (hotel_id, amenities) VALUES (5, 'Free WiFi');
+              INSERT INTO hotel_amenities (hotel_id, amenities) VALUES (5, 'Fitness Center');
+              INSERT INTO hotel_amenities (hotel_id, amenities) VALUES (5, 'Swimming Pool');
+              INSERT INTO hotel_amenities (hotel_id, amenities) VALUES (5, 'Spa');
+              INSERT INTO hotel_amenities (hotel_id, amenities) VALUES (5, 'Restaurant');
+              INSERT INTO hotel_amenities (hotel_id, amenities) VALUES (6, 'Free WiFi');
+              INSERT INTO hotel_amenities (hotel_id, amenities) VALUES (6, 'Parking');
+              INSERT INTO hotel_amenities (hotel_id, amenities) VALUES (6, 'Fitness Center');
+              INSERT INTO hotel_amenities (hotel_id, amenities) VALUES (7, 'Free WiFi');
+              INSERT INTO hotel_amenities (hotel_id, amenities) VALUES (7, 'Restaurant');
+              INSERT INTO hotel_amenities (hotel_id, amenities) VALUES (8, 'Free WiFi');
+              INSERT INTO hotel_amenities (hotel_id, amenities) VALUES (8, 'Parking');
+              INSERT INTO hotel_amenities (hotel_id, amenities) VALUES (8, 'Swimming Pool');
+              INSERT INTO hotel_amenities (hotel_id, amenities) VALUES (8, 'Fitness Center');
+              INSERT INTO hotel_amenities (hotel_id, amenities) VALUES (9, 'Free WiFi');
+              INSERT INTO hotel_amenities (hotel_id, amenities) VALUES (9, 'Parking');
+              INSERT INTO hotel_amenities (hotel_id, amenities) VALUES (9, 'Conference Room');
+              INSERT INTO hotel_amenities (hotel_id, amenities) VALUES (10, 'Free WiFi');
+              INSERT INTO hotel_amenities (hotel_id, amenities) VALUES (10, 'Parking');
