@@ -1,143 +1,110 @@
-# Hotel Service
+# Hotel Service API
 
-A Spring Boot REST API for managing hotel listings with search and filtering capabilities.
+A Spring Boot REST API designed for managing hotel listings with search, filtering, and data aggregation capabilities.
 
 ## Tech Stack
 
-- Java 21
-- Spring Boot 3.5.11 (Web, Data JPA, Validation, Actuator)
-- H2 in-memory database
-- Liquibase (schema migrations + seed data)
-- MapStruct 1.6.3
-- Lombok
-- springdoc-openapi 2.8.6 (Swagger UI)
-
-## Prerequisites
-
-- JDK 21 (system Java may differ — see [Running](#running))
-- Maven wrapper included (`./mvnw`)
+* **Core:** Java 21 & Spring Boot 3.5.11
+* **Database:** H2 (In-memory) with Liquibase for versioned migrations.
+* **Mapping:** MapStruct 1.6.3 & Lombok.
+* **Documentation:** Springdoc-OpenAPI 2.8.6 (Swagger UI).
+* **Utilities:** Java Records for DTOs, Jakarta Validation.
 
 ## Getting Started
 
-### 1. Configure environment
+### Prerequisites
+* **JDK 21** (Ensure your `JAVA_HOME` is set correctly).
+* **Maven Wrapper** (Included as `./mvnw`).
 
-Create a `.env` file in the project root (or copy the example below):
+### 1. Environment Configuration
+Create a `.env` file in the project root to configure database settings:
 
-```
+```properties
 DB_URL=jdbc:h2:mem:hoteldb;DB_CLOSE_DELAY=-1;INIT=CREATE SCHEMA IF NOT EXISTS PUBLIC
 DB_DRIVER=org.h2.Driver
-DB_USERNAME=
+DB_USERNAME=sa
 DB_PASSWORD=
+
 ```
 
-The application reads this file via a custom `EnvironmentPostProcessor`. CLI/environment variables take precedence over `.env`.
-
-### 2. Run the application
-
-If Java 21 is not your system default, set `JAVA_HOME` explicitly:
-
-```bash
-JAVA_HOME="C:/Program Files/Java/jdk-21" ./mvnw spring-boot:run
-```
+### 2. Execution Commands
+**Run App**     ./mvnw spring-boot:run
+**Run Tests**   ./mvnw test 
 
 The server starts on **port 8092**.
 
-### 3. Run tests
+## API Reference
 
-```bash
-JAVA_HOME="C:/Program Files/Java/jdk-21" ./mvnw test
-```
+**Base Path:** `/property-view`
 
-Tests use a separate `src/test/resources/application.yaml` with a hardcoded H2 URL, so no `.env` is needed for testing.
-
-## API
-
-Base path: `/property-view`
-
-Interactive docs available at: `http://localhost:8092/swagger-ui.html`
-OpenAPI spec: `http://localhost:8092/v3/api-docs`
-
-### Endpoints
+### Core Endpoints
 
 | Method | Path | Description |
-|--------|------|-------------|
-| `GET` | `/hotels` | List all hotels (brief view) |
-| `GET` | `/hotels/{id}` | Get full hotel details |
-| `GET` | `/search` | Search hotels by filters |
-| `POST` | `/hotels` | Create a new hotel (returns 201) |
-| `POST` | `/hotels/{id}/amenities` | Add amenities to a hotel |
-| `GET` | `/histogram/{param}` | Count hotels grouped by field |
+| --- | --- | --- |
+| `GET` | `/hotels` | Retrieve all hotels (Brief View) with pagination. |
+| `GET` | `/hotels/{id}` | Get full details for a specific hotel. |
+| `GET` | `/search` | Advanced search using dynamic filters. |
+| `POST` | `/hotels` | Create a new hotel listing. |
+| `POST` | `/hotels/{id}/amenities` | Bulk add amenities to an existing hotel. |
+| `GET` | `/histogram/{param}` | Aggregate statistics (count) by a specific field. |
 
-### Search parameters (`GET /search`)
+### Search & Statistics
 
-All parameters are optional and combinable:
+**Pagination:** Defaults to 20 items per page, sorted by ID (ASC).
 
-| Param | Type | Description |
-|-------|------|-------------|
-| `name` | string | Partial match on hotel name |
-| `brand` | string | Partial match on brand |
-| `city` | string | Partial match on city |
-| `country` | string | Partial match on country |
-| `amenities` | string[] | Hotels that have all listed amenities |
+#### Search Filters (`GET /search`)
 
-### Histogram parameters (`GET /histogram/{param}`)
+* **`name`, `brand`, `city`, `country**`: Case-insensitive partial matching.
+* **`amenities`**: Returns hotels containing all requested amenity strings.
 
-Valid values: `brand`, `city`, `country`, `amenities`
+#### Histogram Grouping (`GET /histogram/{param}`)
 
-Returns a `Map<String, Long>` of value → count.
+Supported parameters: `brand`, `city`, `country`, `amenities`. Returns a Map of value to count.
 
-### Request body: create hotel (`POST /hotels`)
+## Data Handling
+
+### Request Body: Create Hotel (`POST /hotels`)
 
 ```json
 {
-  "name": "Grand Hotel",
-  "description": "Optional description",
-  "brand": "Marriott",
+  "name": "Grand Palace",
+  "brand": "Luxury Group",
   "address": {
-    "houseNumber": 10,
-    "street": "Main Street",
-    "city": "Minsk",
-    "country": "Belarus",
+    "houseNumber": "12B",
+    "street": "High St",
+    "city": "London",
+    "country": "UK",
     "postCode": "220000"
   },
   "contacts": {
-    "phone": "+375291234567",
-    "email": "info@grandhotel.com"
+    "phone": "+447700900000",
+    "email": "stay@grandpalace.com"
   },
   "arrivalTime": {
     "checkIn": "14:00",
     "checkOut": "12:00"
   }
 }
-```
-
-`name` and `brand` are required; all other fields are optional.
-
-## Project Structure
 
 ```
-src/main/java/com/example/hotelservice/
-├── config/          # OpenApiConfig, DotenvConfig (EnvironmentPostProcessor)
-├── controller/      # HotelController
-├── dto/             # Java records: HotelBriefDto, HotelFullDto, HotelCreateDto, ...
-├── entity/          # Hotel, Address (embeddable), Contacts (embeddable), ArrivalTime (embeddable)
-├── exception/       # HotelNotFoundException, InvalidHistogramParameterException, GlobalExceptionHandler
-├── mapper/          # HotelMapper (MapStruct)
-├── repository/      # HotelRepository (JPA + Specification), HotelSpecification
-└── service/         # HotelService interface, HotelServiceImpl
 
-src/main/resources/
-├── application.yaml
-└── db/changelog/
-    ├── db.changelog-master.yaml
-    ├── 001-create-tables.yaml   # DDL
-    └── 002-load-data.yaml       # 10 seed hotels + amenities
-```
+### Validation Rules
+
+* **postCode**: Must be exactly 6 digits.
+* **phone**: Must start with `+` and contain between 10 and 20 characters.
+* **arrivalTime**: Standard `HH:mm` format.
+
+## Project Architecture
+
+* **config/**: OpenAPI/Swagger and Dotenv EnvironmentPostProcessor.
+* **controller/**: REST layer handling requests and Jakarta validation.
+* **dto/**: Immutable Java Records for data transfer.
+* **entity/**: JPA entities (Address, Contacts, and ArrivalTime are @Embeddable).
+* **repository/**: JPA repositories using Specification for dynamic queries.
+* **service/**: Transactional business logic (Service/ServiceImpl pattern).
 
 ## Development Notes
 
-- **OSIV is disabled** (`spring.jpa.open-in-view: false`). Lazy associations must be loaded within a transaction.
-- **`HotelServiceImpl`** is `@Transactional(readOnly = true)` at class level; write methods override with `@Transactional`.
-- **DTOs are Java records** — use canonical constructors, not builders.
-- **`HotelSpecification`** is a `final` utility class with static factory methods; LIKE wildcards are escaped.
-- **H2 console** is available at `http://localhost:8092/h2-console` (JDBC URL: `jdbc:h2:mem:hoteldb`).
+* **OSIV Disabled**: `spring.jpa.open-in-view` is set to false for predictable database sessions.
+* **Transactional Integrity**: `HotelServiceImpl` is @Transactional(readOnly = true) by default, with write access enabled for modification methods.
+* **H2 Console**: Available at `http://localhost:8092/h2-console`.
