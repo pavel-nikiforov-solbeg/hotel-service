@@ -1,0 +1,38 @@
+databaseChangeLog:
+  - changeSet:
+      id: 003-add-performance-indexes
+      author: hotelservice
+      changes:
+        # Index for grouping and filtering by brand
+        - createIndex:
+            tableName: hotels
+            indexName: idx_hotel_brand
+            columns:
+              - column:
+                  name: brand
+
+        # Composite index for location-based search (Country + City)
+        - createIndex:
+            tableName: hotels
+            indexName: idx_hotel_location
+            columns:
+              - column:
+                  name: country
+              - column:
+                  name: city
+
+        # Index for the join column to optimize amenity lookups
+        - createIndex:
+            tableName: hotel_amenities
+            indexName: idx_amenities_hotel_id
+            columns:
+              - column:
+                  name: hotel_id
+
+        # Index for filtering by specific amenities
+        - createIndex:
+            tableName: hotel_amenities
+            indexName: idx_amenity_name
+            columns:
+              - column:
+                  name: amenities
