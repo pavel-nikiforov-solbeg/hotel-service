@@ -96,7 +96,7 @@ Supported parameters: `brand`, `city`, `country`, `amenities`. Returns a Map of 
 
 ## Project Architecture
 
-* **config/**: OpenAPI/Swagger and Dotenv EnvironmentPostProcessor.
+* **config/**: OpenAPI/Swagger.
 * **controller/**: REST layer handling requests and Jakarta validation.
 * **dto/**: Immutable Java Records for data transfer.
 * **entity/**: JPA entities (Address, Contacts, and ArrivalTime are @Embeddable).
