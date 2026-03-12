@@ -1,6 +1,6 @@
 package com.example.hotelservice.dto;
 
-import java.util.List;
+import java.util.Set;
 
 public record HotelFullDto(
         Long id,
@@ -10,5 +10,5 @@ public record HotelFullDto(
         AddressDto address,
         ContactsDto contacts,
         ArrivalTimeDto arrivalTime,
-        List<String> amenities) {
+        Set<String> amenities) {
 }

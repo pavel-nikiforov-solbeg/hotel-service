@@ -21,7 +21,7 @@ databaseChangeLog:
                   type: STRING
               - column:
                   name: house_number
-                  type: NUMERIC
+                  type: STRING
               - column:
                   name: street
                   type: STRING
@@ -51,37 +51,19 @@ databaseChangeLog:
       id: 002-load-amenities
       author: hotelservice
       changes:
+        - loadData:
+            tableName: hotel_amenities
+            file: db/data/hotel_amenities.csv
+            columns:
+              - column:
+                  name: hotel_id
+                  type: NUMERIC
+              - column:
+                  name: amenities
+                  type: STRING
+  - changeSet:
+      id: 003-reset-hotel-id
+      author: hotelservice
+      changes:
         - sql:
-            sql: >
-              INSERT INTO hotel_amenities (hotel_id, amenities) VALUES (1, 'Free WiFi');
-              INSERT INTO hotel_amenities (hotel_id, amenities) VALUES (1, 'Parking');
-              INSERT INTO hotel_amenities (hotel_id, amenities) VALUES (1, 'Swimming Pool');
-              INSERT INTO hotel_amenities (hotel_id, amenities) VALUES (1, 'Spa');
-              INSERT INTO hotel_amenities (hotel_id, amenities) VALUES (2, 'Free WiFi');
-              INSERT INTO hotel_amenities (hotel_id, amenities) VALUES (2, 'Fitness Center');
-              INSERT INTO hotel_amenities (hotel_id, amenities) VALUES (2, 'Restaurant');
-              INSERT INTO hotel_amenities (hotel_id, amenities) VALUES (3, 'Free WiFi');
-              INSERT INTO hotel_amenities (hotel_id, amenities) VALUES (3, 'Parking');
-              INSERT INTO hotel_amenities (hotel_id, amenities) VALUES (3, 'Conference Room');
-              INSERT INTO hotel_amenities (hotel_id, amenities) VALUES (3, 'Restaurant');
-              INSERT INTO hotel_amenities (hotel_id, amenities) VALUES (4, 'Free WiFi');
-              INSERT INTO hotel_amenities (hotel_id, amenities) VALUES (4, 'Parking');
-              INSERT INTO hotel_amenities (hotel_id, amenities) VALUES (5, 'Free WiFi');
-              INSERT INTO hotel_amenities (hotel_id, amenities) VALUES (5, 'Fitness Center');
-              INSERT INTO hotel_amenities (hotel_id, amenities) VALUES (5, 'Swimming Pool');
-              INSERT INTO hotel_amenities (hotel_id, amenities) VALUES (5, 'Spa');
-              INSERT INTO hotel_amenities (hotel_id, amenities) VALUES (5, 'Restaurant');
-              INSERT INTO hotel_amenities (hotel_id, amenities) VALUES (6, 'Free WiFi');
-              INSERT INTO hotel_amenities (hotel_id, amenities) VALUES (6, 'Parking');
-              INSERT INTO hotel_amenities (hotel_id, amenities) VALUES (6, 'Fitness Center');
-              INSERT INTO hotel_amenities (hotel_id, amenities) VALUES (7, 'Free WiFi');
-              INSERT INTO hotel_amenities (hotel_id, amenities) VALUES (7, 'Restaurant');
-              INSERT INTO hotel_amenities (hotel_id, amenities) VALUES (8, 'Free WiFi');
-              INSERT INTO hotel_amenities (hotel_id, amenities) VALUES (8, 'Parking');
-              INSERT INTO hotel_amenities (hotel_id, amenities) VALUES (8, 'Swimming Pool');
-              INSERT INTO hotel_amenities (hotel_id, amenities) VALUES (8, 'Fitness Center');
-              INSERT INTO hotel_amenities (hotel_id, amenities) VALUES (9, 'Free WiFi');
-              INSERT INTO hotel_amenities (hotel_id, amenities) VALUES (9, 'Parking');
-              INSERT INTO hotel_amenities (hotel_id, amenities) VALUES (9, 'Conference Room');
-              INSERT INTO hotel_amenities (hotel_id, amenities) VALUES (10, 'Free WiFi');
-              INSERT INTO hotel_amenities (hotel_id, amenities) VALUES (10, 'Parking');
+            sql: ALTER TABLE hotels ALTER COLUMN id RESTART WITH 100;

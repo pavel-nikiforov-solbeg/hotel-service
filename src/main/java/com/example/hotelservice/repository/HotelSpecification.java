@@ -9,26 +9,28 @@ import java.util.List;
 
 public final class HotelSpecification {
 
+    private static final String LIKE_ESCAPE = "\\";
+
     private HotelSpecification() {}
 
     public static Specification<Hotel> hasName(String name) {
         return (root, query, cb) ->
-                cb.like(cb.lower(root.get("name")), likePattern(name));
+                cb.like(cb.lower(root.get("name")), likePattern(name), cb.literal(LIKE_ESCAPE.charAt(0)));
     }
 
     public static Specification<Hotel> hasBrand(String brand) {
         return (root, query, cb) ->
-                cb.like(cb.lower(root.get("brand")), likePattern(brand));
+                cb.like(cb.lower(root.get("brand")), likePattern(brand), cb.literal(LIKE_ESCAPE.charAt(0)));
     }
 
     public static Specification<Hotel> hasCity(String city) {
         return (root, query, cb) ->
-                cb.like(cb.lower(root.get("address").get("city")), likePattern(city));
+                cb.like(cb.lower(root.get("address").get("city")), likePattern(city), cb.literal(LIKE_ESCAPE.charAt(0)));
     }
 
     public static Specification<Hotel> hasCountry(String country) {
         return (root, query, cb) ->
-                cb.like(cb.lower(root.get("address").get("country")), likePattern(country));
+                cb.like(cb.lower(root.get("address").get("country")), likePattern(country), cb.literal(LIKE_ESCAPE.charAt(0)));
     }
 
     public static Specification<Hotel> hasAmenity(String amenity) {
@@ -37,7 +39,7 @@ public final class HotelSpecification {
                 query.distinct(true);
             }
             Join<Hotel, String> amenitiesJoin = root.join("amenities");
-            return cb.like(cb.lower(amenitiesJoin.as(String.class)), likePattern(amenity));
+            return cb.like(cb.lower(amenitiesJoin.as(String.class)), likePattern(amenity), cb.literal(LIKE_ESCAPE.charAt(0)));
         };
     }
 
@@ -72,8 +74,8 @@ public final class HotelSpecification {
     }
 
     private static String escapeLike(String value) {
-        return value.replace("\\", "\\\\")
-                    .replace("%", "\\%")
-                    .replace("_", "\\_");
+        return value.replace(LIKE_ESCAPE, LIKE_ESCAPE + LIKE_ESCAPE)
+                .replace("%", LIKE_ESCAPE + "%")
+                .replace("_", LIKE_ESCAPE + "_");
     }
 }

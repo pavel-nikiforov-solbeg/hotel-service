@@ -1,21 +1,33 @@
 package com.example.hotelservice.entity;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Embeddable
-@Data
+@Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class Address {
 
-    private Integer houseNumber;
+    @Column(name = "house_number")
+    private String houseNumber;
+
+    @Column(name = "street")
     private String street;
+
+    @Column(name = "city")
     private String city;
+
+    @Column(name = "country")
     private String country;
+
+    @Column(name = "post_code")
     private String postCode;
 }

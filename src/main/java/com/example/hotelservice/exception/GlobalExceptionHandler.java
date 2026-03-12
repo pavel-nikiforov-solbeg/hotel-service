@@ -1,5 +1,7 @@
 package com.example.hotelservice.exception;
 
+import com.example.hotelservice.dto.ErrorResponse;
+import com.example.hotelservice.dto.ValidationErrorResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -16,30 +18,35 @@ public class GlobalExceptionHandler {
     private static final String ERROR_KEY = "error";
 
     @ExceptionHandler(HotelNotFoundException.class)
-    public ResponseEntity<Map<String, Object>> handleHotelNotFound(HotelNotFoundException ex) {
-        Map<String, Object> body = new HashMap<>();
-        body.put(ERROR_KEY, "Hotel not found");
-        body.put("id", ex.getId());
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
+    public ResponseEntity<ErrorResponse> handleHotelNotFound(HotelNotFoundException ex) {
+        ErrorResponse response = new ErrorResponse(
+                "Hotel not found",
+                Map.of("id", ex.getId())
+        );
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
 
     @ExceptionHandler(InvalidHistogramParameterException.class)
-    public ResponseEntity<Map<String, Object>> handleInvalidHistogramParameter(InvalidHistogramParameterException ex) {
-        Map<String, Object> body = new HashMap<>();
-        body.put(ERROR_KEY, ex.getMessage());
-        body.put("param", ex.getParam());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
+    public ResponseEntity<ErrorResponse> handleInvalidHistogramParameter(InvalidHistogramParameterException ex) {
+        ErrorResponse response = new ErrorResponse(
+                ex.getMessage(),
+                Map.of("param", ex.getParam())
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Map<String, Object>> handleValidationErrors(MethodArgumentNotValidException ex) {
-        Map<String, Object> body = new HashMap<>();
+    public ResponseEntity<ValidationErrorResponse> handleValidationErrors(MethodArgumentNotValidException ex) {
         Map<String, String> fieldErrors = new HashMap<>();
         for (FieldError fieldError : ex.getBindingResult().getFieldErrors()) {
             fieldErrors.put(fieldError.getField(), fieldError.getDefaultMessage());
         }
-        body.put(ERROR_KEY, "Validation failed");
-        body.put("details", fieldErrors);
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
+
+        ValidationErrorResponse response = new ValidationErrorResponse(
+                "Validation failed",
+                fieldErrors
+        );
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 }

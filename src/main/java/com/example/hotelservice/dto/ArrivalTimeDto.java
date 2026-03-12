@@ -1,4 +1,10 @@
 package com.example.hotelservice.dto;
 
-public record ArrivalTimeDto(String checkIn, String checkOut) {
+import jakarta.validation.constraints.NotNull;
+
+import java.time.LocalTime;
+
+public record ArrivalTimeDto(
+        @NotNull LocalTime checkIn,
+        @NotNull LocalTime checkOut) {
 }

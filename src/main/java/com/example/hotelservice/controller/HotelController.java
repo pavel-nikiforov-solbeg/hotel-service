@@ -4,14 +4,24 @@ import com.example.hotelservice.dto.HotelBriefDto;
 import com.example.hotelservice.dto.HotelCreateDto;
 import com.example.hotelservice.dto.HotelFullDto;
 import com.example.hotelservice.service.HotelService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/property-view")
@@ -20,39 +30,91 @@ public class HotelController {
 
     private final HotelService hotelService;
 
+    @Operation(
+            summary = "Get a paginated list of all hotels",
+            description = "Returns a paginated list of brief hotel information. " +
+                    "Supports pagination (page, size) and sorting (sort). " +
+                    "Default sort: by id ascending."
+    )
     @GetMapping("/hotels")
-    public ResponseEntity<List<HotelBriefDto>> getAllHotels() {
-        return ResponseEntity.ok(hotelService.getAllHotels());
+    public ResponseEntity<Page<HotelBriefDto>> getAllHotels(
+            @ParameterObject
+            @PageableDefault(
+                    size = 20,
+                    sort = "id",
+                    direction = Sort.Direction.ASC
+            ) Pageable pageable) {
+        return ResponseEntity.ok(hotelService.getAllHotels(pageable));
     }
 
+    @Operation(
+            summary = "Get detailed information about a hotel by ID",
+            description = "Returns complete information about a specific hotel including amenities, contacts, and arrival times."
+    )
     @GetMapping("/hotels/{id}")
-    public ResponseEntity<HotelFullDto> getHotelById(@PathVariable Long id) {
+    public ResponseEntity<HotelFullDto> getHotelById(
+            @PathVariable @Parameter(description = "Hotel ID") Long id) {
         return ResponseEntity.ok(hotelService.getHotelById(id));
     }
 
+    @Operation(
+            summary = "Search hotels by filters (paginated)",
+            description = "Searches hotels using optional filters: name, brand, city, country, amenities. " +
+                    "Results are paginated and support sorting. " +
+                    "Default sort: by id ascending."
+    )
     @GetMapping("/search")
-    public ResponseEntity<List<HotelBriefDto>> searchHotels(
-            @RequestParam(required = false) String name,
-            @RequestParam(required = false) String brand,
-            @RequestParam(required = false) String city,
-            @RequestParam(required = false) String country,
-            @RequestParam(required = false) List<String> amenities) {
-        return ResponseEntity.ok(hotelService.searchHotels(name, brand, city, country, amenities));
+    public ResponseEntity<Page<HotelBriefDto>> searchHotels(
+            @RequestParam(required = false) @Parameter(description = "Hotel name (partial match)") String name,
+            @RequestParam(required = false) @Parameter(description = "Hotel brand") String brand,
+            @RequestParam(required = false) @Parameter(description = "City name") String city,
+            @RequestParam(required = false) @Parameter(description = "Country name") String country,
+            @RequestParam(required = false) @Parameter(description = "Set of required amenities") List<String> amenities,
+            @ParameterObject
+            @PageableDefault(
+                    size = 20,
+                    sort = "id",
+                    direction = Sort.Direction.ASC
+            ) Pageable pageable) {
+        return ResponseEntity.ok(hotelService.searchHotels(name, brand, city, country, amenities, pageable));
     }
 
+    @Operation(
+            summary = "Create a new hotel",
+            description = "Creates a new hotel entry with the provided details. " +
+                    "Address, contacts and arrival times are required."
+    )
     @PostMapping("/hotels")
-    public ResponseEntity<HotelBriefDto> createHotel(@Valid @RequestBody HotelCreateDto dto) {
+    public ResponseEntity<HotelBriefDto> createHotel(
+            @Valid @RequestBody @Parameter(description = "Hotel creation request") HotelCreateDto dto) {
         return ResponseEntity.status(HttpStatus.CREATED).body(hotelService.createHotel(dto));
     }
 
+    @Operation(
+            summary = "Add amenities to an existing hotel",
+            description = "Adds one or more amenities to the specified hotel. " +
+                    "Duplicates are automatically ignored (as amenities are a set). " +
+                    "Blank or null values are ignored. Maximum 50 amenities per request."
+    )
     @PostMapping("/hotels/{id}/amenities")
-    public ResponseEntity<Void> addAmenities(@PathVariable Long id, @RequestBody List<String> amenities) {
+    public ResponseEntity<Void> addAmenities(
+            @PathVariable @Parameter(description = "Hotel ID") Long id,
+            @Valid @RequestBody
+            @Size(max = 50, message = "Maximum 50 amenities per request")
+            @Parameter(description = "Set of amenities to add (non-blank strings, duplicates ignored)")
+            Set<@NotBlank @Size(max = 100) String> amenities) {
         hotelService.addAmenities(id, amenities);
         return ResponseEntity.ok().build();
     }
 
+    @Operation(
+            summary = "Get histogram by parameter",
+            description = "Returns distribution count grouped by the specified parameter. " +
+                    "Supported values: brand, city, country, amenities."
+    )
     @GetMapping("/histogram/{param}")
-    public ResponseEntity<Map<String, Long>> getHistogram(@PathVariable String param) {
+    public ResponseEntity<Map<String, Long>> getHistogram(
+            @PathVariable @Parameter(description = "Grouping parameter: brand, city, country or amenities") String param) {
         return ResponseEntity.ok(hotelService.getHistogram(param));
     }
 }

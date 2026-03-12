@@ -1,0 +1,340 @@
+{
+  "info": {
+    "name": "Hotel Service",
+    "description": "Postman collection for all Hotel Service endpoints. Set the `baseUrl` variable to match your environment (default: http://localhost:8092).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8092",
+      "type": "string"
+    },
+    {
+      "key": "hotelId",
+      "value": "1",
+      "type": "string",
+      "description": "Default hotel ID used in single-hotel requests. Update after running 'Create Hotel' if needed."
+    }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/actuator/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["actuator", "health"]
+            },
+            "description": "Spring Boot Actuator health endpoint. Returns overall application status."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Hotels",
+      "item": [
+        {
+          "name": "Get All Hotels",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/property-view/hotels",
+              "host": ["{{baseUrl}}"],
+              "path": ["property-view", "hotels"]
+            },
+            "description": "Returns a brief list of all hotels."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Hotel by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/property-view/hotels/{{hotelId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["property-view", "hotels", "{{hotelId}}"]
+            },
+            "description": "Returns full details for a single hotel. Uses the `hotelId` collection variable."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Hotel",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const body = pm.response.json();",
+                  "    pm.collectionVariables.set('hotelId', body.id);",
+                  "    pm.test('hotelId saved to collection variable', () => pm.expect(body.id).to.be.a('number'));",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Grand Hotel Minsk\",\n  \"description\": \"A luxurious hotel in the heart of Minsk.\",\n  \"brand\": \"Marriott\",\n  \"address\": {\n    \"houseNumber\": 10,\n    \"street\": \"Nezavisimosti Avenue\",\n    \"city\": \"Minsk\",\n    \"country\": \"Belarus\",\n    \"postCode\": \"220050\"\n  },\n  \"contacts\": {\n    \"phone\": \"+375291234567\",\n    \"email\": \"info@grandhotelminsk.com\"\n  },\n  \"arrivalTime\": {\n    \"checkIn\": \"14:00\",\n    \"checkOut\": \"12:00\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/property-view/hotels",
+              "host": ["{{baseUrl}}"],
+              "path": ["property-view", "hotels"]
+            },
+            "description": "Creates a new hotel. Returns 201 with the created hotel brief. The test script saves the returned `id` to the `hotelId` collection variable."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Hotel — Validation Error (missing name)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"\",\n  \"brand\": \"Marriott\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/property-view/hotels",
+              "host": ["{{baseUrl}}"],
+              "path": ["property-view", "hotels"]
+            },
+            "description": "Expects a 400 Bad Request because `name` is blank (@NotBlank)."
+          },
+          "response": []
+        },
+        {
+          "name": "Add Amenities",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "[\n  \"Free Wi-Fi\",\n  \"Parking\",\n  \"Swimming Pool\"\n]"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/property-view/hotels/{{hotelId}}/amenities",
+              "host": ["{{baseUrl}}"],
+              "path": ["property-view", "hotels", "{{hotelId}}", "amenities"]
+            },
+            "description": "Adds amenities to the hotel identified by `hotelId`. Returns 200 with empty body."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Hotel by ID — Not Found",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/property-view/hotels/999999",
+              "host": ["{{baseUrl}}"],
+              "path": ["property-view", "hotels", "999999"]
+            },
+            "description": "Expects a 404 Not Found for a non-existent hotel ID."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Search",
+      "item": [
+        {
+          "name": "Search — All Filters",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/property-view/search?name=Grand&brand=Marriott&city=Minsk&country=Belarus&amenities=Free Wi-Fi&amenities=Parking",
+              "host": ["{{baseUrl}}"],
+              "path": ["property-view", "search"],
+              "query": [
+                { "key": "name",      "value": "Grand" },
+                { "key": "brand",     "value": "Marriott" },
+                { "key": "city",      "value": "Minsk" },
+                { "key": "country",   "value": "Belarus" },
+                { "key": "amenities", "value": "Free Wi-Fi" },
+                { "key": "amenities", "value": "Parking" }
+              ]
+            },
+            "description": "Search with all available filters combined."
+          },
+          "response": []
+        },
+        {
+          "name": "Search — By Brand",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/property-view/search?brand=Marriott",
+              "host": ["{{baseUrl}}"],
+              "path": ["property-view", "search"],
+              "query": [
+                { "key": "brand", "value": "Marriott" }
+              ]
+            },
+            "description": "Search hotels by brand (partial match)."
+          },
+          "response": []
+        },
+        {
+          "name": "Search — By City",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/property-view/search?city=Minsk",
+              "host": ["{{baseUrl}}"],
+              "path": ["property-view", "search"],
+              "query": [
+                { "key": "city", "value": "Minsk" }
+              ]
+            },
+            "description": "Search hotels by city (partial match)."
+          },
+          "response": []
+        },
+        {
+          "name": "Search — By Amenities",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/property-view/search?amenities=Free Wi-Fi&amenities=Parking",
+              "host": ["{{baseUrl}}"],
+              "path": ["property-view", "search"],
+              "query": [
+                { "key": "amenities", "value": "Free Wi-Fi" },
+                { "key": "amenities", "value": "Parking" }
+              ]
+            },
+            "description": "Returns hotels that have ALL listed amenities."
+          },
+          "response": []
+        },
+        {
+          "name": "Search — No Filters (returns all)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/property-view/search",
+              "host": ["{{baseUrl}}"],
+              "path": ["property-view", "search"]
+            },
+            "description": "No query parameters — behaves like Get All Hotels."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Histogram",
+      "item": [
+        {
+          "name": "Histogram — By Brand",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/property-view/histogram/brand",
+              "host": ["{{baseUrl}}"],
+              "path": ["property-view", "histogram", "brand"]
+            },
+            "description": "Returns a map of brand → hotel count."
+          },
+          "response": []
+        },
+        {
+          "name": "Histogram — By City",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/property-view/histogram/city",
+              "host": ["{{baseUrl}}"],
+              "path": ["property-view", "histogram", "city"]
+            },
+            "description": "Returns a map of city → hotel count."
+          },
+          "response": []
+        },
+        {
+          "name": "Histogram — By Country",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/property-view/histogram/country",
+              "host": ["{{baseUrl}}"],
+              "path": ["property-view", "histogram", "country"]
+            },
+            "description": "Returns a map of country → hotel count."
+          },
+          "response": []
+        },
+        {
+          "name": "Histogram — By Amenities",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/property-view/histogram/amenities",
+              "host": ["{{baseUrl}}"],
+              "path": ["property-view", "histogram", "amenities"]
+            },
+            "description": "Returns a map of amenity name → hotel count."
+          },
+          "response": []
+        },
+        {
+          "name": "Histogram — Invalid Parameter",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/property-view/histogram/unknown",
+              "host": ["{{baseUrl}}"],
+              "path": ["property-view", "histogram", "unknown"]
+            },
+            "description": "Expects a 400 Bad Request (InvalidHistogramParameterException)."
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

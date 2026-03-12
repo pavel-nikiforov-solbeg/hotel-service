@@ -13,16 +13,15 @@ import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.proxy.HibernateProxy;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
 
 @Entity
 @Table(name = "hotels")
@@ -36,7 +35,6 @@ public class Hotel {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @EqualsAndHashCode.Include
     private Long id;
 
     @NotBlank
@@ -60,9 +58,9 @@ public class Hotel {
     @CollectionTable(name = "hotel_amenities", joinColumns = @JoinColumn(name = "hotel_id"))
     @Column(name = "amenities")
     @Builder.Default
-    private List<String> amenities = new ArrayList<>();
+    private Set<String> amenities = new HashSet<>();
 
-    //equals and hashcode generates by amplicode, best practices for jpa entities
+    // Hibernate-safe equals/hashCode — based on entity ID and proxy awareness (by Amplicode)
     @Override
     public final boolean equals(Object o) {
         if (this == o) {

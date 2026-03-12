@@ -15,7 +15,8 @@ import org.mapstruct.Mapping;
 import org.mapstruct.Named;
 import org.mapstruct.ReportingPolicy;
 
-import java.util.StringJoiner;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 
 /**
  * MapStruct mapper for converting between {@link Hotel} entities and their DTO representations.
@@ -29,7 +30,7 @@ import java.util.StringJoiner;
 )
 public interface HotelMapper {
 
-    //Create DTO to Entity
+    // Create DTO to Entity
 
     /**
      * Maps a creation request DTO to a new {@link Hotel} entity.
@@ -62,10 +63,13 @@ public interface HotelMapper {
 
     /**
      * Maps an {@link ArrivalTimeDto} to the {@link ArrivalTime} embeddable.
+     * Uses qualified mapping methods for time conversion.
      *
      * @param dto arrival time data from the request
      * @return {@link ArrivalTime} embeddable, or {@code null} if {@code dto} is {@code null}
      */
+    @Mapping(target = "checkIn",  qualifiedByName = "localTimeToString")
+    @Mapping(target = "checkOut", qualifiedByName = "localTimeToString")
     ArrivalTime toArrivalTime(ArrivalTimeDto dto);
 
     // Entity to Full DTO
@@ -97,65 +101,37 @@ public interface HotelMapper {
 
     /**
      * Maps an {@link ArrivalTime} embeddable to {@link ArrivalTimeDto}.
+     * Uses qualified mapping methods for time parsing.
      *
      * @param arrivalTime the embeddable from the entity
      * @return DTO representation, or {@code null} if {@code arrivalTime} is {@code null}
      */
+    @Mapping(target = "checkIn",  qualifiedByName = "stringToLocalTime")
+    @Mapping(target = "checkOut", qualifiedByName = "stringToLocalTime")
     ArrivalTimeDto toArrivalTimeDto(ArrivalTime arrivalTime);
 
-    //Entity to brief DTO
+    // Entity to brief DTO
 
     /**
      * Maps a {@link Hotel} entity to a {@link HotelBriefDto} used in list responses.
-     * The structured {@link Address} embeddable is formatted into a single human-readable
-     * string via {@link #formatAddress(Address)}.
+     * The structured {@link Address} embeddable is mapped directly to {@link AddressDto}
+     * via {@link #toAddressDto(Address)}.
      *
      * @param hotel the entity loaded from the database
      * @return brief DTO representation, or {@code null} if {@code hotel} is {@code null}
      */
-    @Mapping(target = "address", source = "address", qualifiedByName = "formatAddress")
     @Mapping(target = "phone", source = "contacts.phone")
     HotelBriefDto toBriefDto(Hotel hotel);
 
-    /**
-     * Formats a structured {@link Address} embeddable into a single comma-separated string.
-     * Only non-null components are included. Returns {@code null} when all components are absent.
-     *
-     * <p>Example: {@code "9 Main St, Minsk, 220001, Belarus"}
-     *
-     * @param address the address embeddable; may be {@code null}
-     * @return formatted address string, or {@code null} if {@code address} is {@code null}
-     *         or contains no data
-     */
-    @Named("formatAddress")
-    default String formatAddress(Address address) {
-        if (address == null) {
-            return null;
-        }
+    // Custom conversion methods
 
-        StringJoiner joiner = new StringJoiner(", ");
-
-        String houseAndStreet = buildHouseAndStreet(address.getHouseNumber(), address.getStreet());
-        if (houseAndStreet != null) {
-            joiner.add(houseAndStreet);
-        }
-        if (address.getCity() != null) {
-            joiner.add(address.getCity());
-        }
-        if (address.getPostCode() != null) {
-            joiner.add(address.getPostCode());
-        }
-        if (address.getCountry() != null) {
-            joiner.add(address.getCountry());
-        }
-
-        return joiner.length() > 0 ? joiner.toString() : null;
+    @Named("localTimeToString")
+    default String localTimeToString(LocalTime time) {
+        return time != null ? time.format(DateTimeFormatter.ofPattern("HH:mm")) : null;
     }
 
-    default String buildHouseAndStreet(Integer houseNumber, String street) {
-        if (houseNumber == null && street == null) return null;
-        if (houseNumber == null) return street;
-        if (street == null) return String.valueOf(houseNumber);
-        return houseNumber + " " + street;
+    @Named("stringToLocalTime")
+    default LocalTime stringToLocalTime(String time) {
+        return time != null ? LocalTime.parse(time, DateTimeFormatter.ofPattern("HH:mm")) : null;
     }
 }

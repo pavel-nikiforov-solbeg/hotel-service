@@ -1,6 +1,12 @@
 package com.example.hotelservice;
 
-import com.example.hotelservice.dto.*;
+import com.example.hotelservice.dto.AddressDto;
+import com.example.hotelservice.dto.ArrivalTimeDto;
+import com.example.hotelservice.dto.ContactsDto;
+import com.example.hotelservice.dto.HistogramEntry;
+import com.example.hotelservice.dto.HotelBriefDto;
+import com.example.hotelservice.dto.HotelCreateDto;
+import com.example.hotelservice.dto.HotelFullDto;
 import com.example.hotelservice.entity.Address;
 import com.example.hotelservice.entity.ArrivalTime;
 import com.example.hotelservice.entity.Contacts;
@@ -13,20 +19,31 @@ import com.example.hotelservice.service.HotelServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentMatchers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 
-import java.util.ArrayList;
+import java.time.LocalTime;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 
 @ExtendWith(MockitoExtension.class)
 class HotelServiceImplTest {
@@ -51,34 +68,43 @@ class HotelServiceImplTest {
                 .name("Grand Hotel")
                 .description("Luxury hotel")
                 .brand("Marriott")
-                .address(Address.builder().houseNumber(9).street("Main St").city("Minsk").country("Belarus").postCode("220001").build())
+                .address(Address.builder().houseNumber("9").street("Main St").city("Minsk").country("Belarus").postCode("220001").build())
                 .contacts(Contacts.builder().phone("+375-17-000-00-00").email("info@grand.by").build())
                 .arrivalTime(ArrivalTime.builder().checkIn("14:00").checkOut("12:00").build())
-                .amenities(new ArrayList<>(List.of("Free WiFi", "Parking")))
+                .amenities(new HashSet<>(Set.of("Free WiFi", "Parking")))
                 .build();
 
-        briefDto = new HotelBriefDto(1L, "Grand Hotel", "Luxury hotel", "9 Main St, Minsk, 220001, Belarus", "+375-17-000-00-00");
+        briefDto = new HotelBriefDto(
+                1L,
+                "Grand Hotel",
+                "Luxury hotel",
+                new AddressDto("9", "Main St", "Minsk", "Belarus", "220001"),
+                "+375-17-000-00-00");
 
         fullDto = new HotelFullDto(
                 1L,
                 "Grand Hotel",
                 "Luxury hotel",
                 "Marriott",
-                new AddressDto(9, "Main St", "Minsk", "Belarus", "220001"),
+                new AddressDto("9", "Main St", "Minsk", "Belarus", "220001"),
                 new ContactsDto("+375-17-000-00-00", "info@grand.by"),
-                new ArrivalTimeDto("14:00", "12:00"),
-                List.of("Free WiFi", "Parking"));
+                new ArrivalTimeDto(LocalTime.of(14, 0), LocalTime.of(12, 0)),
+                Set.of("Free WiFi", "Parking"));
     }
 
     @Test
-    void getAllHotels_returnsList() {
-        when(hotelRepository.findAll()).thenReturn(List.of(hotel));
+    void getAllHotels_returnsPage() {
+        Pageable pageable = PageRequest.of(0, 20);
+        Page<Hotel> hotelPage = new PageImpl<>(List.of(hotel), pageable, 1);
+
+        when(hotelRepository.findAll(pageable)).thenReturn(hotelPage);
         when(hotelMapper.toBriefDto(hotel)).thenReturn(briefDto);
 
-        List<HotelBriefDto> result = hotelService.getAllHotels();
+        Page<HotelBriefDto> result = hotelService.getAllHotels(pageable);
 
-        assertThat(result).hasSize(1);
-        assertThat(result.get(0).name()).isEqualTo("Grand Hotel");
+        assertThat(result.getContent()).hasSize(1);
+        assertThat(result.getContent().getFirst().name()).isEqualTo("Grand Hotel");
+        assertThat(result.getTotalElements()).isEqualTo(1);
     }
 
     @Test
@@ -102,7 +128,11 @@ class HotelServiceImplTest {
 
     @Test
     void createHotel_savesAndReturns() {
-        HotelCreateDto createDto = new HotelCreateDto("Grand Hotel", null, "Marriott", null, null, null);
+        HotelCreateDto createDto = new HotelCreateDto(
+                "Grand Hotel", null, "Marriott",
+                new AddressDto("9", "Main St", "Minsk", "Belarus", "220001"),
+                new ContactsDto("+375170000000", "info@grand.by"),
+                new ArrivalTimeDto(LocalTime.of(14, 0), LocalTime.of(12, 0)));
 
         when(hotelMapper.toEntity(createDto)).thenReturn(hotel);
         when(hotelRepository.save(hotel)).thenReturn(hotel);
@@ -118,7 +148,7 @@ class HotelServiceImplTest {
     void addAmenities_found() {
         when(hotelRepository.findById(1L)).thenReturn(Optional.of(hotel));
 
-        hotelService.addAmenities(1L, List.of("Spa", "Pool"));
+        hotelService.addAmenities(1L, Set.of("Spa", "Pool"));
 
         assertThat(hotel.getAmenities()).contains("Spa", "Pool");
         verify(hotelRepository, never()).save(any());
@@ -128,7 +158,7 @@ class HotelServiceImplTest {
     void addAmenities_notFound() {
         when(hotelRepository.findById(99L)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> hotelService.addAmenities(99L, List.of("Spa")))
+        assertThatThrownBy(() -> hotelService.addAmenities(99L, Set.of("Spa")))
                 .isInstanceOf(HotelNotFoundException.class);
     }
 
@@ -177,13 +207,21 @@ class HotelServiceImplTest {
     }
 
     @Test
-    @SuppressWarnings("unchecked")
-    void searchHotels_withFilters() {
-        when(hotelRepository.findAll(any(Specification.class))).thenReturn(List.of(hotel));
+    void searchHotels_withFilters_returnsPage() {
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<Hotel> hotelPage = new PageImpl<>(List.of(hotel), pageable, 1);
+
+        when(hotelRepository.findAll(
+                ArgumentMatchers.<Specification<Hotel>>any(),
+                eq(pageable)
+        )).thenReturn(hotelPage);
         when(hotelMapper.toBriefDto(hotel)).thenReturn(briefDto);
 
-        List<HotelBriefDto> result = hotelService.searchHotels("Grand", "Marriott", "Minsk", "Belarus", List.of("Free WiFi"));
+        Page<HotelBriefDto> result = hotelService.searchHotels(
+                "Grand", "Marriott", "Minsk", "Belarus", List.of("Free WiFi"), pageable);
 
-        assertThat(result).hasSize(1);
+        assertThat(result.getContent()).hasSize(1);
+        assertThat(result.getTotalElements()).isEqualTo(1);
+        assertThat(result.getContent().getFirst().name()).isEqualTo("Grand Hotel");
     }
 }

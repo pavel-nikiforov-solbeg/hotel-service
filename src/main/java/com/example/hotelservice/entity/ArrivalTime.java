@@ -5,11 +5,13 @@ import jakarta.persistence.Embeddable;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Embeddable
-@Data
+@Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -19,6 +21,7 @@ public class ArrivalTime {
     @Column(name = "arrival_check_in")
     private String checkIn;
 
+    @NotBlank
     @Column(name = "arrival_check_out")
     private String checkOut;
 }
