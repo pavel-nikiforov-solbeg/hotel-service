@@ -28,8 +28,11 @@ DB_PASSWORD=
 ```
 
 ### 2. Execution Commands
-**Run App**     ./mvnw spring-boot:run
-**Run Tests**   ./mvnw test 
+
+| Action | Command |
+| :--- | :--- |
+| **Run App** | `./mvnw spring-boot:run` |
+| **Run Tests** | `./mvnw test` |
 
 The server starts on **port 8092**.
 
