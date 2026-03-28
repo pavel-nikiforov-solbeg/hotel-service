@@ -1,0 +1,11 @@
+databaseChangeLog:
+  - changeSet:
+      id: 004-create-hotel-sequence
+      author: hotelservice
+      changes:
+        - createSequence:
+            sequenceName: hotel_seq
+            startValue: 200
+            incrementBy: 50
+            minValue: 1
+            cycle: false

@@ -6,6 +6,7 @@ import org.springframework.data.jpa.domain.Specification;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 public final class HotelSpecification {
 
@@ -43,7 +44,7 @@ public final class HotelSpecification {
         };
     }
 
-    public static Specification<Hotel> buildSpec(String name, String brand, String city, String country, List<String> amenities) {
+    public static Specification<Hotel> buildSpec(String name, String brand, String city, String country, Set<String> amenities) {
         List<Specification<Hotel>> specs = new ArrayList<>();
 
         if (name != null && !name.isBlank()) {

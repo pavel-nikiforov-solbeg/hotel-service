@@ -42,10 +42,10 @@ databaseChangeLog:
                   type: STRING
               - column:
                   name: arrival_check_in
-                  type: STRING
+                  type: OTHER
               - column:
                   name: arrival_check_out
-                  type: STRING
+                  type: OTHER
 
   - changeSet:
       id: 002-load-amenities
@@ -61,9 +61,3 @@ databaseChangeLog:
               - column:
                   name: amenities
                   type: STRING
-  - changeSet:
-      id: 003-reset-hotel-id
-      author: hotelservice
-      changes:
-        - sql:
-            sql: ALTER TABLE hotels ALTER COLUMN id RESTART WITH 100;

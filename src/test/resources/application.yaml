@@ -12,13 +12,10 @@ spring:
   jpa:
     hibernate:
       ddl-auto: validate
-    show-sql: true
+    show-sql: false
     open-in-view: false
   liquibase:
     change-log: classpath:db/changelog/db.changelog-master.yaml
-  h2:
-    console:
-      enabled: true
 
 springdoc:
   api-docs:

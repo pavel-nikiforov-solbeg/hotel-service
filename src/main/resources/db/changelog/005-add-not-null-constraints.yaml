@@ -1,0 +1,34 @@
+databaseChangeLog:
+  - changeSet:
+      id: 005-add-not-null-constraints
+      author: hotelservice
+      changes:
+        - addNotNullConstraint:
+            tableName: hotels
+            columnName: city
+            columnDataType: VARCHAR(255)
+
+        - addNotNullConstraint:
+            tableName: hotels
+            columnName: country
+            columnDataType: VARCHAR(255)
+
+        - addNotNullConstraint:
+            tableName: hotels
+            columnName: phone
+            columnDataType: VARCHAR(255)
+
+        - addNotNullConstraint:
+            tableName: hotels
+            columnName: email
+            columnDataType: VARCHAR(255)
+
+        - addNotNullConstraint:
+            tableName: hotels
+            columnName: arrival_check_in
+            columnDataType: TIME
+
+        - addNotNullConstraint:
+            tableName: hotels
+            columnName: arrival_check_out
+            columnDataType: TIME

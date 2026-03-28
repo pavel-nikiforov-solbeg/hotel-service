@@ -12,11 +12,7 @@ import com.example.hotelservice.entity.Contacts;
 import com.example.hotelservice.entity.Hotel;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import org.mapstruct.Named;
 import org.mapstruct.ReportingPolicy;
-
-import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
 
 /**
  * MapStruct mapper for converting between {@link Hotel} entities and their DTO representations.
@@ -63,13 +59,10 @@ public interface HotelMapper {
 
     /**
      * Maps an {@link ArrivalTimeDto} to the {@link ArrivalTime} embeddable.
-     * Uses qualified mapping methods for time conversion.
      *
      * @param dto arrival time data from the request
      * @return {@link ArrivalTime} embeddable, or {@code null} if {@code dto} is {@code null}
      */
-    @Mapping(target = "checkIn",  qualifiedByName = "localTimeToString")
-    @Mapping(target = "checkOut", qualifiedByName = "localTimeToString")
     ArrivalTime toArrivalTime(ArrivalTimeDto dto);
 
     // Entity to Full DTO
@@ -101,13 +94,10 @@ public interface HotelMapper {
 
     /**
      * Maps an {@link ArrivalTime} embeddable to {@link ArrivalTimeDto}.
-     * Uses qualified mapping methods for time parsing.
      *
      * @param arrivalTime the embeddable from the entity
      * @return DTO representation, or {@code null} if {@code arrivalTime} is {@code null}
      */
-    @Mapping(target = "checkIn",  qualifiedByName = "stringToLocalTime")
-    @Mapping(target = "checkOut", qualifiedByName = "stringToLocalTime")
     ArrivalTimeDto toArrivalTimeDto(ArrivalTime arrivalTime);
 
     // Entity to brief DTO
@@ -123,15 +113,4 @@ public interface HotelMapper {
     @Mapping(target = "phone", source = "contacts.phone")
     HotelBriefDto toBriefDto(Hotel hotel);
 
-    // Custom conversion methods
-
-    @Named("localTimeToString")
-    default String localTimeToString(LocalTime time) {
-        return time != null ? time.format(DateTimeFormatter.ofPattern("HH:mm")) : null;
-    }
-
-    @Named("stringToLocalTime")
-    default LocalTime stringToLocalTime(String time) {
-        return time != null ? LocalTime.parse(time, DateTimeFormatter.ofPattern("HH:mm")) : null;
-    }
 }

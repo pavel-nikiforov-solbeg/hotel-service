@@ -4,6 +4,7 @@ import com.example.hotelservice.dto.AddressDto;
 import com.example.hotelservice.dto.ArrivalTimeDto;
 import com.example.hotelservice.dto.ContactsDto;
 import com.example.hotelservice.dto.HistogramEntry;
+import com.example.hotelservice.dto.HistogramParam;
 import com.example.hotelservice.dto.HotelBriefDto;
 import com.example.hotelservice.dto.HotelCreateDto;
 import com.example.hotelservice.dto.HotelFullDto;
@@ -12,7 +13,6 @@ import com.example.hotelservice.entity.ArrivalTime;
 import com.example.hotelservice.entity.Contacts;
 import com.example.hotelservice.entity.Hotel;
 import com.example.hotelservice.exception.HotelNotFoundException;
-import com.example.hotelservice.exception.InvalidHistogramParameterException;
 import com.example.hotelservice.mapper.HotelMapper;
 import com.example.hotelservice.repository.HotelRepository;
 import com.example.hotelservice.service.HotelServiceImpl;
@@ -70,8 +70,8 @@ class HotelServiceImplTest {
                 .brand("Marriott")
                 .address(Address.builder().houseNumber("9").street("Main St").city("Minsk").country("Belarus").postCode("220001").build())
                 .contacts(Contacts.builder().phone("+375-17-000-00-00").email("info@grand.by").build())
-                .arrivalTime(ArrivalTime.builder().checkIn("14:00").checkOut("12:00").build())
-                .amenities(new HashSet<>(Set.of("Free WiFi", "Parking")))
+                .arrivalTime(ArrivalTime.builder().checkIn(LocalTime.of(14, 0)).checkOut(LocalTime.of(12, 0)).build())
+                .amenities(new HashSet<>(Set.of("free wifi", "parking")))
                 .build();
 
         briefDto = new HotelBriefDto(
@@ -89,7 +89,7 @@ class HotelServiceImplTest {
                 new AddressDto("9", "Main St", "Minsk", "Belarus", "220001"),
                 new ContactsDto("+375-17-000-00-00", "info@grand.by"),
                 new ArrivalTimeDto(LocalTime.of(14, 0), LocalTime.of(12, 0)),
-                Set.of("Free WiFi", "Parking"));
+                Set.of("free wifi", "parking"));
     }
 
     @Test
@@ -150,8 +150,42 @@ class HotelServiceImplTest {
 
         hotelService.addAmenities(1L, Set.of("Spa", "Pool"));
 
-        assertThat(hotel.getAmenities()).contains("Spa", "Pool");
+        // Amenities are normalized to lowercase
+        assertThat(hotel.getAmenities()).contains("spa", "pool");
         verify(hotelRepository, never()).save(any());
+    }
+
+    @Test
+    void addAmenities_emptySet_doesNothing() {
+        hotelService.addAmenities(1L, Set.of());
+
+        // Early return before DB query — findById must never be called
+        verify(hotelRepository, never()).findById(any());
+        verify(hotelRepository, never()).save(any());
+    }
+
+    @Test
+    void addAmenities_nullSet_doesNothing() {
+        hotelService.addAmenities(1L, null);
+
+        // Early return before DB query — findById must never be called
+        verify(hotelRepository, never()).findById(any());
+        verify(hotelRepository, never()).save(any());
+    }
+
+    @Test
+    void addAmenities_blankAndNullElements_onlyValidAdded() {
+        when(hotelRepository.findById(1L)).thenReturn(Optional.of(hotel));
+
+        Set<String> mixed = new HashSet<>();
+        mixed.add(null);
+        mixed.add("  ");
+        mixed.add("  Pool  ");
+
+        hotelService.addAmenities(1L, mixed);
+
+        assertThat(hotel.getAmenities()).contains("pool");
+        assertThat(hotel.getAmenities()).doesNotContain("  ", "  Pool  ");
     }
 
     @Test
@@ -168,7 +202,7 @@ class HotelServiceImplTest {
                 new HistogramEntry("Marriott", 3L),
                 new HistogramEntry("Hilton", 2L)));
 
-        Map<String, Long> result = hotelService.getHistogram("brand");
+        Map<String, Long> result = hotelService.getHistogram(HistogramParam.BRAND);
 
         assertThat(result).containsEntry("Marriott", 3L).containsEntry("Hilton", 2L);
     }
@@ -177,7 +211,7 @@ class HotelServiceImplTest {
     void getHistogram_city() {
         when(hotelRepository.countByCity()).thenReturn(List.of(new HistogramEntry("Minsk", 10L)));
 
-        Map<String, Long> result = hotelService.getHistogram("city");
+        Map<String, Long> result = hotelService.getHistogram(HistogramParam.CITY);
 
         assertThat(result).containsEntry("Minsk", 10L);
     }
@@ -186,7 +220,7 @@ class HotelServiceImplTest {
     void getHistogram_country() {
         when(hotelRepository.countByCountry()).thenReturn(List.of(new HistogramEntry("Belarus", 10L)));
 
-        Map<String, Long> result = hotelService.getHistogram("country");
+        Map<String, Long> result = hotelService.getHistogram(HistogramParam.COUNTRY);
 
         assertThat(result).containsEntry("Belarus", 10L);
     }
@@ -195,15 +229,38 @@ class HotelServiceImplTest {
     void getHistogram_amenities() {
         when(hotelRepository.countByAmenity()).thenReturn(List.of(new HistogramEntry("Free WiFi", 10L)));
 
-        Map<String, Long> result = hotelService.getHistogram("amenities");
+        Map<String, Long> result = hotelService.getHistogram(HistogramParam.AMENITIES);
 
         assertThat(result).containsEntry("Free WiFi", 10L);
     }
 
     @Test
-    void getHistogram_unknown_throwsException() {
-        assertThatThrownBy(() -> hotelService.getHistogram("unknown"))
-                .isInstanceOf(InvalidHistogramParameterException.class);
+    void getAllHotels_emptyPage_returnsEmpty() {
+        Pageable pageable = PageRequest.of(0, 20);
+        Page<Hotel> emptyPage = Page.empty(pageable);
+
+        when(hotelRepository.findAll(pageable)).thenReturn(emptyPage);
+
+        Page<HotelBriefDto> result = hotelService.getAllHotels(pageable);
+
+        assertThat(result.getContent()).isEmpty();
+        assertThat(result.getTotalElements()).isZero();
+    }
+
+    @Test
+    void searchHotels_allNullFilters_returnsPage() {
+        Pageable pageable = PageRequest.of(0, 20);
+        Page<Hotel> hotelPage = new PageImpl<>(List.of(hotel), pageable, 1);
+
+        when(hotelRepository.findAll(
+                ArgumentMatchers.<Specification<Hotel>>any(),
+                eq(pageable)
+        )).thenReturn(hotelPage);
+        when(hotelMapper.toBriefDto(hotel)).thenReturn(briefDto);
+
+        Page<HotelBriefDto> result = hotelService.searchHotels(null, null, null, null, null, pageable);
+
+        assertThat(result.getContent()).hasSize(1);
     }
 
     @Test
@@ -218,7 +275,7 @@ class HotelServiceImplTest {
         when(hotelMapper.toBriefDto(hotel)).thenReturn(briefDto);
 
         Page<HotelBriefDto> result = hotelService.searchHotels(
-                "Grand", "Marriott", "Minsk", "Belarus", List.of("Free WiFi"), pageable);
+                "Grand", "Marriott", "Minsk", "Belarus", Set.of("Free WiFi"), pageable);
 
         assertThat(result.getContent()).hasSize(1);
         assertThat(result.getTotalElements()).isEqualTo(1);

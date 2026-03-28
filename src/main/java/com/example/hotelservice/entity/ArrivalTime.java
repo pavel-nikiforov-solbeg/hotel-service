@@ -2,12 +2,14 @@ package com.example.hotelservice.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
-import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
+import java.time.LocalTime;
 
 @Embeddable
 @Getter
@@ -15,13 +17,12 @@ import lombok.Setter;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@EqualsAndHashCode
 public class ArrivalTime {
 
-    @NotBlank
-    @Column(name = "arrival_check_in")
-    private String checkIn;
+    @Column(name = "arrival_check_in", nullable = false)
+    private LocalTime checkIn;
 
-    @NotBlank
-    @Column(name = "arrival_check_out")
-    private String checkOut;
+    @Column(name = "arrival_check_out", nullable = false)
+    private LocalTime checkOut;
 }

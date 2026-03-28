@@ -31,3 +31,9 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Project-local ###
+.claude/
+*.md
+!README.md
+*.txt

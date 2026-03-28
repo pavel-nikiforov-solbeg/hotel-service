@@ -49,10 +49,10 @@ databaseChangeLog:
                   type: VARCHAR(255)
               - column:
                   name: arrival_check_in
-                  type: VARCHAR(10)
+                  type: TIME
               - column:
                   name: arrival_check_out
-                  type: VARCHAR(10)
+                  type: TIME
 
   - changeSet:
       id: 001-create-hotel-amenities

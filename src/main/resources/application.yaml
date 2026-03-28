@@ -21,9 +21,6 @@ spring:
     properties:
       hibernate:
         format_sql: true
-        jdbc:
-          lob:
-            non_contextual_creation: true
 
   liquibase:
     enabled: true
@@ -31,8 +28,16 @@ spring:
 
   h2:
     console:
-      enabled: true
-      path: /h2-console
+      enabled: true   # never expose in production; enable only in local dev via profile override
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: when-authorized
 
 springdoc:
   api-docs:

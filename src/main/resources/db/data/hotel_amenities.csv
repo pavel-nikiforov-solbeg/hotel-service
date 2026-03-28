@@ -1,33 +1,33 @@
 hotel_id,amenities
-1,Free WiFi
-1,Parking
-1,Swimming Pool
-1,Spa
-2,Free WiFi
-2,Fitness Center
-2,Restaurant
-3,Free WiFi
-3,Parking
-3,Conference Room
-3,Restaurant
-4,Free WiFi
-4,Parking
-5,Free WiFi
-5,Fitness Center
-5,Swimming Pool
-5,Spa
-5,Restaurant
-6,Free WiFi
-6,Parking
-6,Fitness Center
-7,Free WiFi
-7,Restaurant
-8,Free WiFi
-8,Parking
-8,Swimming Pool
-8,Fitness Center
-9,Free WiFi
-9,Parking
-9,Conference Room
-10,Free WiFi
-10,Parking
+1,free wifi
+1,parking
+1,swimming pool
+1,spa
+2,free wifi
+2,fitness center
+2,restaurant
+3,free wifi
+3,parking
+3,conference room
+3,restaurant
+4,free wifi
+4,parking
+5,free wifi
+5,fitness center
+5,swimming pool
+5,spa
+5,restaurant
+6,free wifi
+6,parking
+6,fitness center
+7,free wifi
+7,restaurant
+8,free wifi
+8,parking
+8,swimming pool
+8,fitness center
+9,free wifi
+9,parking
+9,conference room
+10,free wifi
+10,parking

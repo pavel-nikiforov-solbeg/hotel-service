@@ -4,16 +4,17 @@ import com.example.hotelservice.controller.HotelController;
 import com.example.hotelservice.dto.AddressDto;
 import com.example.hotelservice.dto.ArrivalTimeDto;
 import com.example.hotelservice.dto.ContactsDto;
+import com.example.hotelservice.dto.HistogramParam;
 import com.example.hotelservice.dto.HotelBriefDto;
 import com.example.hotelservice.dto.HotelCreateDto;
 import com.example.hotelservice.dto.HotelFullDto;
 import com.example.hotelservice.exception.HotelNotFoundException;
-import com.example.hotelservice.exception.InvalidHistogramParameterException;
 import com.example.hotelservice.service.HotelService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -23,6 +24,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalTime;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -36,10 +38,12 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(HotelController.class)
+@Import(com.example.hotelservice.config.HistogramParamConverter.class)
 class HotelControllerTest {
 
     @Autowired
@@ -69,7 +73,7 @@ class HotelControllerTest {
                 new AddressDto("9", "Main St", "Minsk", "Belarus", "220001"),
                 new ContactsDto("+375-17-000-00-00", "info@grand.by"),
                 new ArrivalTimeDto(LocalTime.of(14, 0), LocalTime.of(12, 0)),
-                Set.of("Free WiFi", "Parking"));
+                Set.of("free wifi", "parking"));
     }
 
     @Test
@@ -97,7 +101,7 @@ class HotelControllerTest {
         mockMvc.perform(get("/property-view/hotels/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.brand").value("Marriott"))
-                .andExpect(jsonPath("$.amenities", hasItem("Free WiFi")));
+                .andExpect(jsonPath("$.amenities", hasItem("free wifi")));
     }
 
     @Test
@@ -107,13 +111,16 @@ class HotelControllerTest {
         mockMvc.perform(get("/property-view/hotels/99"))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.error").value("Hotel not found"))
-                .andExpect(jsonPath("$.id").value(99));
+                .andExpect(jsonPath("$.details.id").value(99));  // fixed: was $.id (root), correct path is $.details.id
     }
 
     @Test
     void search_returns200_withPagination() throws Exception {
+        // Use total >= pageSize so Spring Data does not recalculate totalElements.
+        // PageImpl recalculates when offset + pageSize > total (0+10=10 > 3 → becomes 1).
+        // With total=30: 0+10=10 is NOT > 30, so totalElements stays 30.
         List<HotelBriefDto> content = List.of(sampleBrief());
-        Page<HotelBriefDto> page = new PageImpl<>(content, PageRequest.of(0, 10), 3);
+        Page<HotelBriefDto> page = new PageImpl<>(content, PageRequest.of(0, 10), 30);
 
         when(hotelService.searchHotels(any(), any(), any(), any(), any(), any(Pageable.class)))
                 .thenReturn(page);
@@ -125,12 +132,12 @@ class HotelControllerTest {
                         .param("size", "10"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content[0].name").value("Grand Hotel"))
-                .andExpect(jsonPath("$.totalElements").value(3))
+                .andExpect(jsonPath("$.totalElements").value(30))
                 .andExpect(jsonPath("$.size").value(10));
     }
 
     @Test
-    void createHotel_returns201() throws Exception {
+    void createHotel_returns201_withLocationHeader() throws Exception {
         HotelCreateDto createDto = new HotelCreateDto(
                 "Grand Hotel",
                 null,
@@ -145,6 +152,7 @@ class HotelControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(createDto)))
                 .andExpect(status().isCreated())
+                .andExpect(header().string("Location", "/property-view/hotels/1"))
                 .andExpect(jsonPath("$.name").value("Grand Hotel"));
     }
 
@@ -159,13 +167,45 @@ class HotelControllerTest {
     }
 
     @Test
-    void addAmenities_returns200() throws Exception {
+    void addAmenities_returns204() throws Exception {
         doNothing().when(hotelService).addAmenities(eq(1L), anySet());
 
         mockMvc.perform(post("/property-view/hotels/1/amenities")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(Set.of("Spa", "Pool"))))
-                .andExpect(status().isOk());
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void searchHotels_noFilters_returns200() throws Exception {
+        List<HotelBriefDto> content = List.of(sampleBrief());
+        Page<HotelBriefDto> page = new PageImpl<>(content, PageRequest.of(0, 20), 1);
+
+        when(hotelService.searchHotels(any(), any(), any(), any(), any(), any(Pageable.class)))
+                .thenReturn(page);
+
+        mockMvc.perform(get("/property-view/search"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].name").value("Grand Hotel"));
+    }
+
+    @Test
+    void addAmenities_tooMany_returns400() throws Exception {
+        Set<String> tooMany = new HashSet<>();
+        for (int i = 1; i <= 51; i++) tooMany.add("Amenity" + i);
+
+        mockMvc.perform(post("/property-view/hotels/1/amenities")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(tooMany)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void createHotel_malformedJson_returns400() throws Exception {
+        mockMvc.perform(post("/property-view/hotels")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{ this is not valid json }"))
+                .andExpect(status().isBadRequest());
     }
 
     @Test
@@ -180,7 +220,7 @@ class HotelControllerTest {
 
     @Test
     void getHistogram_returns200() throws Exception {
-        when(hotelService.getHistogram("brand")).thenReturn(Map.of("Marriott", 3L, "Hilton", 2L));
+        when(hotelService.getHistogram(HistogramParam.BRAND)).thenReturn(Map.of("Marriott", 3L, "Hilton", 2L));
 
         mockMvc.perform(get("/property-view/histogram/brand"))
                 .andExpect(status().isOk())
@@ -189,8 +229,9 @@ class HotelControllerTest {
 
     @Test
     void getHistogram_unknownParam_returns400() throws Exception {
-        when(hotelService.getHistogram("unknown")).thenThrow(new InvalidHistogramParameterException("unknown"));
-
+        // Spring MVC converts the path variable via HistogramParamConverter before reaching the service.
+        // An unknown value triggers InvalidHistogramParameterException from the converter → 400.
+        // No service mock needed.
         mockMvc.perform(get("/property-view/histogram/unknown"))
                 .andExpect(status().isBadRequest());
     }

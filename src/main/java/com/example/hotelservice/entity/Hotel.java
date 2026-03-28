@@ -9,14 +9,15 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
-import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import org.hibernate.annotations.BatchSize;
 import org.hibernate.proxy.HibernateProxy;
 
 import java.util.HashSet;
@@ -25,24 +26,23 @@ import java.util.Set;
 
 @Entity
 @Table(name = "hotels")
+@NoArgsConstructor
+@AllArgsConstructor
 @Getter
 @Setter
 @Builder
-@NoArgsConstructor
-@AllArgsConstructor
 @ToString(exclude = "amenities")
 public class Hotel {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "hotel_seq")
+    @SequenceGenerator(name = "hotel_seq", sequenceName = "hotel_seq")
     private Long id;
 
-    @NotBlank
     private String name;
 
     private String description;
 
-    @NotBlank
     private String brand;
 
     @Embedded
@@ -57,6 +57,7 @@ public class Hotel {
     @ElementCollection
     @CollectionTable(name = "hotel_amenities", joinColumns = @JoinColumn(name = "hotel_id"))
     @Column(name = "amenities")
+    @BatchSize(size = 50)
     @Builder.Default
     private Set<String> amenities = new HashSet<>();
 

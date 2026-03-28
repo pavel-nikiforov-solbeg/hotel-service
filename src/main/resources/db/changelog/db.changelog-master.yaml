@@ -3,3 +3,9 @@ databaseChangeLog:
       file: db/changelog/001-create-tables.yaml
   - include:
       file: db/changelog/002-load-data.yaml
+  - include:
+      file: db/changelog/003-add-performance-indexes.yaml
+  - include:
+      file: db/changelog/004-create-hotel-sequence.yaml
+  - include:
+      file: db/changelog/005-add-not-null-constraints.yaml
